@@ -8810,7 +8810,7 @@ function EcranNouveauMotDePasse({ accessToken, onTermine }) {
   );
 }
 
-export default function App() {
+function BossCleverApp() {
   useEffect(() => {
     const id = "bossclever-premium-global";
     if (document.getElementById(id)) return;
@@ -10515,4 +10515,20 @@ export default function App() {
     </div>
     </div>
   );
+}
+// ======================================================
+// ROUTEUR PRINCIPAL BOSSCLEVER
+// #admin = Portail Super Admin
+// ======================================================
+
+export default function App() {
+  const isAdmin =
+    typeof window !== "undefined" &&
+    window.location.hash.startsWith("#admin");
+
+  if (isAdmin) {
+    return <AdminDashboard />;
+  }
+
+  return <BossCleverApp />;
 }
