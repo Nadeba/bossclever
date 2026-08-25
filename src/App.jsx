@@ -10523,13 +10523,151 @@ function BossCleverApp() {
 // ======================================================
 
 export default function App() {
-  const isAdmin =
+  const [adminState, setAdminState] = useState({
+    loading: true,
+    allowed: false,
+  });
+
+  const isAdminRoute =
     typeof window !== "undefined" &&
     window.location.hash.startsWith("#admin");
 
-  if (isAdmin) {
-    return <AdminDashboard />;
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkSuperAdmin() {
+      if (!isAdminRoute) {
+        if (mounted) {
+          setAdminState({
+            loading: false,
+            allowed: false,
+          });
+        }
+        return;
+      }
+
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          if (mounted) {
+            setAdminState({
+              loading: false,
+              allowed: false,
+            });
+          }
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("super_admins")
+          .select("user_id, role, actif")
+          .eq("user_id", user.id)
+          .eq("role", "super_admin")
+          .eq("actif", true)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Erreur vérification Super Admin :", error);
+
+          if (mounted) {
+            setAdminState({
+              loading: false,
+              allowed: false,
+            });
+          }
+          return;
+        }
+
+        if (mounted) {
+          setAdminState({
+            loading: false,
+            allowed: Boolean(data),
+          });
+        }
+      } catch (error) {
+        console.error("Erreur sécurité Super Admin :", error);
+
+        if (mounted) {
+          setAdminState({
+            loading: false,
+            allowed: false,
+          });
+        }
+      }
+    }
+
+    checkSuperAdmin();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isAdminRoute]);
+
+  if (!isAdminRoute) {
+    return <BossCleverApp />;
   }
 
-  return <BossCleverApp />;
+  if (adminState.loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Arial, sans-serif",
+          color: "#0F2B5B",
+        }}
+      >
+        Vérification de l'accès administrateur...
+      </div>
+    );
+  }
+
+  if (!adminState.allowed) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "16px",
+          fontFamily: "Arial, sans-serif",
+          textAlign: "center",
+          padding: "24px",
+        }}
+      >
+        <h1 style={{ color: "#0F2B5B" }}>Accès refusé</h1>
+
+        <p style={{ color: "#667085", maxWidth: "520px" }}>
+          Ce portail est réservé aux Super Administrateurs autorisés de BossClever.
+        </p>
+
+        <button
+          onClick={() => {
+            window.location.hash = "";
+          }}
+          style={{
+            border: "none",
+            borderRadius: "10px",
+            padding: "12px 20px",
+            background: "#1877F2",
+            color: "#FFFFFF",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Retour à BossClever
+        </button>
+      </div>
+    );
+  }
+
+  return <AdminDashboard />;
 }
