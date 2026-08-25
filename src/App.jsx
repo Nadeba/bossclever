@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import LandingPage from "./LandingPage";
 import AdminDashboard from "./AdminDashboard";
+import { supabase } from "./supabase";
 // Page dédiée, sans le contenu marketing autour, pour les Conditions
 // d'utilisation et la Politique de confidentialité — accessible via
 // l'ancre d'URL (#cgu ou #confidentialite), depuis n'importe où dans
