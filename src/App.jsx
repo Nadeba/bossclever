@@ -10523,15 +10523,31 @@ function BossCleverApp() {
 // ======================================================
 
 export default function App() {
+  const [currentHash, setCurrentHash] = useState(() =>
+    typeof window !== "undefined" ? window.location.hash : ""
+  );
+
   const [adminState, setAdminState] = useState({
     loading: true,
     allowed: false,
   });
 
-  const isAdminRoute =
-    typeof window !== "undefined" &&
-    window.location.hash.startsWith("#admin");
+  const isAdminRoute = currentHash.startsWith("#admin");
 
+  // Écoute les changements d'URL (#admin, retour, etc.)
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
+  // Vérification sécurisée du Super Admin
   useEffect(() => {
     let mounted = true;
 
@@ -10544,6 +10560,14 @@ export default function App() {
           });
         }
         return;
+      }
+
+      // À chaque entrée dans #admin, on relance la vérification
+      if (mounted) {
+        setAdminState({
+          loading: true,
+          allowed: false,
+        });
       }
 
       try {
@@ -10607,10 +10631,12 @@ export default function App() {
     };
   }, [isAdminRoute]);
 
+  // Application BossClever normale
   if (!isAdminRoute) {
     return <BossCleverApp />;
   }
 
+  // Vérification en cours
   if (adminState.loading) {
     return (
       <div
@@ -10628,6 +10654,7 @@ export default function App() {
     );
   }
 
+  // Utilisateur non autorisé
   if (!adminState.allowed) {
     return (
       <div
@@ -10669,5 +10696,7 @@ export default function App() {
     );
   }
 
+  // Super Admin autorisé
   return <AdminDashboard />;
+}
 }
