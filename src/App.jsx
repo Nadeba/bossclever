@@ -7522,9 +7522,8 @@ function VueEmploye({
   );
 }
 
-const SUPABASE_URL = "https://oacjriznecslomgcamkv.supabase.co";
-const SUPABASE_KEY = "sb_publishable_80rpe2MRZWELyHmgh1vRTg_q6KsSjPu";
-
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 async function verifierEmailEntreprise(email, code) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verifier_email_entreprise`, {
     method: "POST",
