@@ -8409,13 +8409,24 @@ function EcranConnexion({ onConnecte, roleDeclare, onRetour }) {
           return;
         }
         const session = await connecter(email, motDePasse);
-        onConnecte({
-          ...session,
-          email,
-          userId: session.user?.id,
-          codeSaisi: codeEntreprise.trim().toUpperCase(),
-          roleDeclare,
-        });
+
+// Enregistrer aussi la session dans le client Supabase
+const { error: sessionError } = await supabase.auth.setSession({
+  access_token: session.access_token,
+  refresh_token: session.refresh_token,
+});
+
+if (sessionError) {
+  throw sessionError;
+}
+
+onConnecte({
+  ...session,
+  email,
+  userId: session.user?.id,
+  codeSaisi: codeEntreprise.trim().toUpperCase(),
+  roleDeclare,
+});
       }
     } catch (e) {
       setErreur(e.message);
