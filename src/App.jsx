@@ -10699,4 +10699,4 @@ export default function App() {
   // Super Admin autorisé
   return <AdminDashboard />;
 }
-}
+
