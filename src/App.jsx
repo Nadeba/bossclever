@@ -8418,7 +8418,23 @@ const { error: sessionError } = await supabase.auth.setSession({
 if (sessionError) {
   throw sessionError;
 }
+// Vérifier si l'utilisateur connecté est Super Admin
+const { data: superAdmin, error: superAdminError } = await supabase
+  .from("super_admins")
+  .select("user_id, role, actif")
+  .eq("user_id", session.user?.id)
+  .eq("role", "super_admin")
+  .eq("actif", true)
+  .maybeSingle();
 
+if (superAdminError) {
+  console.error("Erreur vérification Super Admin :", superAdminError);
+}
+
+if (superAdmin) {
+  window.location.hash = "#admin";
+  return;
+}
 onConnecte({
   ...session,
   email,
