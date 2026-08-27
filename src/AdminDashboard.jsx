@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "./supabase";
 
 /* =========================================================
    BossClever — Portail Super Admin
