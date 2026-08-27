@@ -734,7 +734,24 @@ function PlaceholderPage({ title, icon }) {
 export default function AdminDashboard() {
   const [active, setActive] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [nombreEntreprises, setNombreEntreprises] = useState(0);
 
+  useEffect(() => {
+    const chargerNombreEntreprises = async () => {
+      const { count, error } = await supabase
+        .from("etat_app")
+        .select("*", { count: "exact", head: true });
+
+      if (error) {
+        console.error("Erreur chargement nombre entreprises :", error);
+        return;
+      }
+
+      setNombreEntreprises(count ?? 0);
+    };
+
+    chargerNombreEntreprises();
+  }, []);
   const activeItem =
     menuItems.find((item) => item.id === active) || menuItems[0];
 
