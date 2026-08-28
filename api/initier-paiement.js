@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     // --------------------------------------------------------
     // 2. Informations envoyées par BossClever
     // --------------------------------------------------------
-    const { rowId, planId, periode, email, nom } = req.body || {};
+    const { rowId, planId, periode, paymentMethod, email, nom } = req.body || {};
 
     // "mensuel" par défaut si rien n'est précisé, pour ne jamais
     // facturer l'annuel par erreur sur une ancienne version du frontend.
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
 
             data: {
               // Wave est sélectionné par défaut pour le moment.
-              paymentMethod: "wave",
+              paymentMethod: paymentMethod || "wave",
 
               successUrl:
                 "https://bossclever.com/?paiement=succes",
