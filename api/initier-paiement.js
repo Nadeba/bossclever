@@ -95,12 +95,8 @@ export default async function handler(req, res) {
             type: "redirect",
 
             data: {
-              // Aucun moyen de paiement n'est imposé : Jèko affiche sa
-              // propre page avec tous les moyens disponibles, et le
-              // client choisit librement (Wave, Orange Money, MTN MoMo,
-              // Moov Money, Djamo). On ne force plus "wave" par défaut,
-              // car cela verrouillait la page Jèko sur ce seul choix.
-              ...(paymentMethod ? { paymentMethod } : {}),
+              // Wave est sélectionné par défaut pour le moment.
+              paymentMethod: paymentMethod || "wave",
 
               successUrl:
                 "https://bossclever.com/?paiement=succes",
