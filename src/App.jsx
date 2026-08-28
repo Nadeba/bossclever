@@ -1782,7 +1782,7 @@ function GestionAbonnement({ planActuel, abonnement, onChoisir, onPayer }) {
   const [planEnCours, setPlanEnCours] = useState(null);
   const [erreur, setErreur] = useState("");
   const [periode, setPeriode] = useState("mensuel");
-
+const [paymentMethod, setPaymentMethod] = useState("wave");
   const formatPrix = (montant) =>
     new Intl.NumberFormat("fr-FR").format(montant).replace(/\u202f/g, " ");
 
@@ -1794,7 +1794,7 @@ function GestionAbonnement({ planActuel, abonnement, onChoisir, onPayer }) {
     setErreur("");
     setPlanEnCours(p.id);
     try {
-      await onPayer(p.id, periode);
+      await onPayer(p.id, periode, paymentMethod);
       // En cas de succès, onPayer redirige déjà le navigateur vers
       // Jèko — on ne revient jamais jusqu'ici dans ce cas.
     } catch (e) {
@@ -1861,7 +1861,30 @@ function GestionAbonnement({ planActuel, abonnement, onChoisir, onPayer }) {
           Annuel · 2 mois offerts
         </button>
       </div>
+<div style={{ marginTop: 14, marginBottom: 16 }}>
+  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+    Moyen de paiement
+  </div>
 
+  <select
+    value={paymentMethod}
+    onChange={(e) => setPaymentMethod(e.target.value)}
+    style={{
+      padding: "10px 12px",
+      borderRadius: 8,
+      border: "1px solid #D9D9D9",
+      background: "#fff",
+      fontSize: 14,
+      cursor: "pointer",
+    }}
+  >
+    <option value="wave">Wave</option>
+    <option value="orange">Orange Money</option>
+    <option value="mtn">MTN MoMo</option>
+    <option value="moov">Moov Money</option>
+    <option value="djamo">Djamo</option>
+  </select>
+</div>
       {abonnement && abonnement.statut === "actif" && joursRestants !== null && (
         <p style={{ margin: "0 0 12px", fontSize: 13, color: joursRestants <= 5 ? "#993C1D" : "#5F5E5A" }}>
           {joursRestants > 0
