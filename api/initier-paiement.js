@@ -1,12 +1,6 @@
-// Fonction serveur (Vercel) qui initie un paiement CinetPay.
-// La clé API et le Site ID restent secrets ici, jamais dans le code
-// envoyé au navigateur — c'est tout l'intérêt de passer par le serveur.
-
 const MONTANTS_PLANS = {
   essentiel: 15000,
   croissance: 35000,
-  // "decouverte" (gratuit) et "entreprise" (sur devis) ne passent pas
-  // par ce circuit de paiement automatisé.
 };
 
 const NOMS_PLANS = {
@@ -16,56 +10,105 @@ const NOMS_PLANS = {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.status(405).json({ error: "Méthode non autorisée." });
-    return;
+    return res.status(405).json({
+      error: "Méthode non autorisée.",
+    });
   }
 
   try {
     const { rowId, planId, email, nom } = req.body || {};
 
     const montant = MONTANTS_PLANS[planId];
+
     if (!rowId || !montant) {
-      res.status(400).json({ error: "Plan ou entreprise invalide." });
-      return;
+      return res.status(400).json({
+        error: "Plan ou entreprise invalide.",
+      });
     }
 
-    // L'identifiant de transaction encode discrètement l'entreprise et le
-    // plan visé, pour pouvoir les retrouver plus tard lors de la
-    // notification de paiement, sans avoir besoin d'une table dédiée.
-    const transactionId = `${rowId}_${planId}_${Date.now()}`;
+    if (
+      !process.env.JEKO_API_KEY ||
+      !process.env.JEKO_API_KEY_ID ||
+      !process.env.JEKO_STORE_ID
+    ) {
+      return res.status(500).json({
+        error: "Configuration Jèko incomplète.",
+      });
+    }
 
-    const site = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "https://bossclever.vercel.app";
+    const reference = `${rowId}_${planId}_${Date.now()}`;
 
-    const reponse = await fetch("https://api-checkout.cinetpay.com/v2/payment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        apikey: process.env.CINETPAY_APIKEY,
-        site_id: process.env.CINETPAY_SITE_ID,
-        transaction_id: transactionId,
-        amount: montant,
-        currency: "XOF",
-        description: NOMS_PLANS[planId] || "Abonnement BossClever",
-        customer_name: nom || "Client",
-        customer_surname: "BossClever",
-        customer_email: email || "contact@cleverentreprises.com",
-        notify_url: "https://bossclever.vercel.app/api/notification-paiement",
-        return_url: "https://bossclever.vercel.app/?paiement=retour",
-        channels: "ALL",
-      }),
+    const response = await fetch(
+      "https://api.jeko.africa/partner_api/payment_requests",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY": process.env.JEKO_API_KEY,
+          "X-API-KEY-ID": process.env.JEKO_API_KEY_ID,
+        },
+        body: JSON.stringify({
+          storeId: process.env.JEKO_STORE_ID,
+          amountCents: montant,
+          currency: "XOF",
+          reference,
+
+          paymentDetails: {
+            type: "redirect",
+            data: {
+              successUrl: "https://bossclever.com/?paiement=succes",
+              errorUrl: "https://bossclever.com/?paiement=echec",
+            },
+          },
+
+          metadata: {
+            rowId,
+            planId,
+            email: email || "",
+            nom: nom || "",
+            description:
+              NOMS_PLANS[planId] || "Abonnement BossClever",
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Erreur Jèko :", data);
+
+      return res.status(response.status).json({
+        error: "Impossible d'initialiser le paiement Jèko.",
+        details: data,
+      });
+    }
+
+    const paymentUrl =
+      data.redirectUrl ||
+      data.paymentUrl ||
+      data.url ||
+      data?.paymentDetails?.redirectUrl;
+
+    if (!paymentUrl) {
+      console.error("Réponse Jèko sans URL :", data);
+
+      return res.status(500).json({
+        error: "Jèko n'a retourné aucune URL de paiement.",
+        details: data,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      payment_url: paymentUrl,
+      reference,
     });
+  } catch (error) {
+    console.error("Erreur serveur paiement Jèko :", error);
 
-    const data = await reponse.json();
-
-    if (data.code !== "201" || !data.data || !data.data.payment_url) {
-      res.status(502).json({ error: data.message || "CinetPay a refusé la demande." });
-      return;
-    }
-
-    res.status(200).json({ payment_url: data.data.payment_url });
-  } catch (e) {
-    res.status(500).json({ error: "Erreur serveur lors de l'initialisation du paiement." });
+    return res.status(500).json({
+      error: "Erreur serveur pendant l'initialisation du paiement.",
+    });
   }
 }
