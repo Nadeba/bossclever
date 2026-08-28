@@ -3,11 +3,12 @@
 // Fichier : api/initier-paiement.js
 // ============================================================
 
-// Les montants sont définis côté serveur.
-// Le navigateur ne peut donc pas choisir lui-même le montant.
+// Jèko attend "amountCents" en centimes.
+// 15 000 FCFA = 1 500 000 centimes
+// 35 000 FCFA = 3 500 000 centimes
 const MONTANTS_PLANS = {
-  essentiel: 15000,
-  croissance: 35000,
+  essentiel: 1500000,
+  croissance: 3500000,
 };
 
 const NOMS_PLANS = {
@@ -31,12 +32,12 @@ export default async function handler(req, res) {
     // --------------------------------------------------------
     const { rowId, planId, email, nom } = req.body || {};
 
-    const montant = MONTANTS_PLANS[planId];
+    const montantCentimes = MONTANTS_PLANS[planId];
 
     // --------------------------------------------------------
     // 3. Vérification du plan et de l'entreprise
     // --------------------------------------------------------
-    if (!rowId || !montant) {
+    if (!rowId || !montantCentimes) {
       return res.status(400).json({
         error: "Plan ou entreprise invalide.",
       });
@@ -77,7 +78,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           storeId: process.env.JEKO_STORE_ID,
 
-          amountCents: montant,
+          // Montant exprimé en centimes.
+          amountCents: montantCentimes,
 
           currency: "XOF",
 
@@ -87,20 +89,17 @@ export default async function handler(req, res) {
             type: "redirect",
 
             data: {
-              // Pour notre premier test, on utilise Wave.
+              // Wave est sélectionné par défaut pour le moment.
               paymentMethod: "wave",
 
-              // Retour après paiement réussi.
               successUrl:
                 "https://bossclever.com/?paiement=succes",
 
-              // Retour en cas d'échec ou d'annulation.
               errorUrl:
                 "https://bossclever.com/?paiement=echec",
             },
           },
 
-          // Informations BossClever associées à la transaction.
           metadata: {
             rowId,
             planId,
@@ -121,7 +120,7 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     // --------------------------------------------------------
-    // 8. Si Jèko refuse la demande
+    // 8. Gestion d'une erreur retournée par Jèko
     // --------------------------------------------------------
     if (!response.ok) {
       console.error("Erreur Jèko :", data);
@@ -151,7 +150,7 @@ export default async function handler(req, res) {
     }
 
     // --------------------------------------------------------
-    // 10. Retour de l'URL à BossClever
+    // 10. Retour de l'URL de paiement à BossClever
     // --------------------------------------------------------
     return res.status(200).json({
       success: true,
