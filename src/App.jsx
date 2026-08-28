@@ -9332,7 +9332,7 @@ export default function App() {
       return suite;
     });
 
-  const payerPlan = async (planId, periode = "mensuel") => {
+  const payerPlan = async (planId, periode = "mensuel", paymentMethod = "wave") => {
     if (!session || !rowId) return;
     const res = await fetch("/api/initier-paiement", {
       method: "POST",
@@ -9341,6 +9341,7 @@ export default function App() {
         rowId,
         planId,
         periode,
+        paymentMethod,
         email: session.email,
         nom: session.email,
       }),
