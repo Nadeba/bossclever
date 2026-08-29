@@ -1866,24 +1866,72 @@ const [paymentMethod, setPaymentMethod] = useState("wave");
     Moyen de paiement
   </div>
 
-  <select
-    value={paymentMethod}
-    onChange={(e) => setPaymentMethod(e.target.value)}
-    style={{
-      padding: "10px 12px",
-      borderRadius: 8,
-      border: "1px solid #D9D9D9",
-      background: "#fff",
-      fontSize: 14,
-      cursor: "pointer",
-    }}
-  >
-    <option value="wave">Wave</option>
-    <option value="orange">Orange Money</option>
-    <option value="mtn">MTN MoMo</option>
-    <option value="moov">Moov Money</option>
-    <option value="djamo">Djamo</option>
-  </select>
+  <div
+  style={{
+    display: "flex",
+    gap: 12,
+    flexWrap: "wrap",
+  }}
+>
+  {[
+    { id: "wave", nom: "Wave", logo: "/paiements/wave.png" },
+    { id: "orange", nom: "Orange Money", logo: "/paiements/orange.png" },
+    { id: "mtn", nom: "MTN MoMo", logo: "/paiements/mtn.png" },
+    { id: "moov", nom: "Moov Money", logo: "/paiements/moov.png" },
+    { id: "djamo", nom: "Djamo", logo: "/paiements/djamo.png" },
+  ].map((moyen) => {
+    const actif = paymentMethod === moyen.id;
+
+    return (
+      <button
+        key={moyen.id}
+        type="button"
+        onClick={() => setPaymentMethod(moyen.id)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          minWidth: 175,
+          padding: "12px 16px",
+          borderRadius: 10,
+          border: actif
+            ? "2px solid #1877F2"
+            : "1px solid #D9D9D9",
+          background: "#fff",
+          cursor: "pointer",
+          fontSize: 14,
+          fontWeight: 600,
+          color: "#20231F",
+        }}
+      >
+        <span
+          style={{
+            width: 18,
+            height: 18,
+            borderRadius: "50%",
+            border: actif
+              ? "5px solid #1877F2"
+              : "1px solid #999",
+            boxSizing: "border-box",
+            flexShrink: 0,
+          }}
+        />
+
+        <img
+          src={moyen.logo}
+          alt={moyen.nom}
+          style={{
+            width: 34,
+            height: 34,
+            objectFit: "contain",
+          }}
+        />
+
+        <span>{moyen.nom}</span>
+      </button>
+    );
+  })}
+</div>
 </div>
       {abonnement && abonnement.statut === "actif" && joursRestants !== null && (
         <p style={{ margin: "0 0 12px", fontSize: 13, color: joursRestants <= 5 ? "#993C1D" : "#5F5E5A" }}>
