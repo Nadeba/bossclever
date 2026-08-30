@@ -488,7 +488,67 @@ export default async function handler(req, res) {
         prestataire: "jeko",
       },
     };
+    // --------------------------------------------------
+    // Enregistrer le paiement dans l'historique
+    // --------------------------------------------------
 
+    const moyenPaiement =
+      transaction?.paymentMethod ||
+      transaction?.paymentDetails?.paymentMethod ||
+      transaction?.transactionDetails?.paymentMethod ||
+      transaction?.transaction?.paymentMethod ||
+      null;
+
+    const emailPaiement =
+      transaction?.customer?.email ||
+      transaction?.payer?.email ||
+      transaction?.email ||
+      null;
+
+    const nomEntreprise =
+      donneesActuelles?.nomEntreprise ||
+      donneesActuelles?.entreprise?.nom ||
+      donneesActuelles?.nom ||
+      null;
+
+    const paiementRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/paiements?on_conflict=transaction_id`,
+      {
+        method: "POST",
+
+        headers: {
+          apikey: cleService,
+          Authorization: `Bearer ${cleService}`,
+          "Content-Type": "application/json",
+          Prefer: "resolution=ignore-duplicates,return=minimal",
+        },
+
+        body: JSON.stringify({
+          entreprise_id: Number(rowId),
+          plan: planId,
+          periode,
+          montant: (montantRecu ?? montantAttendu) / 100,
+          moyen_paiement: moyenPaiement,
+          reference_jeko: reference,
+          statut: "reussi",
+          transaction_id: transactionId,
+          email: emailPaiement,
+          date_debut: baseExpiration.toISOString(),
+          date_fin: expireLe.toISOString(),
+          nom_entreprise: nomEntreprise,
+          devise: "XOF",
+          date_paiement: payeLe.toISOString(),
+        }),
+      }
+    );
+
+    if (!paiementRes.ok) {
+      const erreurPaiement = await paiementRes.text();
+
+      throw new Error(
+        `Enregistrement paiement impossible (${paiementRes.status}) : ${erreurPaiement}`
+      );
+    }
     // --------------------------------------------------
     // 12. Activer l'abonnement dans Supabase
     // --------------------------------------------------
