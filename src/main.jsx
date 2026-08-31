@@ -64,11 +64,10 @@ function BossCleverRoot() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (actif) {
-        setVerification(true);
-        verifierSuperAdmin(session);
-      }
-    });
+  if (actif) {
+    verifierSuperAdmin(session);
+  }
+});
 
     return () => {
       actif = false;
