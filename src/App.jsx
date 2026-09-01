@@ -10465,6 +10465,7 @@ export default function App() {
           valider={valider}
           rejeter={rejeter}
           assigner={assigner}
+          supprimerTache={supprimerTache}
           criteres={criteres}
           setCriteres={setCriteres}
           resoudreContestation={resoudreContestation}
