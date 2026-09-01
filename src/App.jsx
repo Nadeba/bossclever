@@ -9873,6 +9873,33 @@ export default function App() {
         ],
       };
     });
+  const supprimerTache = (empId, tacheId) => {
+    const employe = employes.find((e) => e.id === empId);
+    const tache = employe?.taches?.find((t) => t.id === tacheId);
+
+    if (!employe || !tache) return;
+
+    if (tache.statut === "validee") {
+      alert("Une tâche déjà validée ne peut pas être supprimée.");
+      return;
+    }
+
+    const confirmer = window.confirm(
+      `Supprimer définitivement la tâche « ${tache.titre} » assignée à ${employe.nom} ?`
+    );
+
+    if (!confirmer) return;
+
+    enregistrerActivite(
+      "Suppression de tâche",
+      `« ${tache.titre} » pour ${employe.nom}`
+    );
+
+    majEmploye(empId, (e) => ({
+      ...e,
+      taches: (e.taches || []).filter((t) => t.id !== tacheId),
+    }));
+  };
 
   // Un objectif fixé par le manager pour un employé — distinct des
   // tâches. S'il n'a aucune tâche rattachée, son statut se règle à la
