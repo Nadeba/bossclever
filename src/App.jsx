@@ -3907,6 +3907,7 @@ function VueManager({
   valider,
   rejeter,
   assigner,
+  supprimerTache,
   criteres,
   setCriteres,
   resoudreContestation,
