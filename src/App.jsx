@@ -5125,6 +5125,28 @@ function VueManager({
                             )}
                             {t.statut === "a_faire" && <Badge>À faire</Badge>}
                             {t.statut === "en_attente" && <Badge tone="warning">En attente</Badge>}
+                            {t.statut !== "validee" && (
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      supprimerTache(g.empId, t.id);
+    }}
+    style={{
+      border: "1px solid #F3C6C6",
+      background: "#FFF7F7",
+      color: "#B42318",
+      borderRadius: 7,
+      padding: "5px 9px",
+      fontSize: 12,
+      fontWeight: 600,
+      cursor: "pointer",
+      flexShrink: 0,
+    }}
+  >
+    🗑 Supprimer
+  </button>
+)}
                           </div>
                         ))}
                       </div>
